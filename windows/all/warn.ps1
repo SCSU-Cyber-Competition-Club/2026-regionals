@@ -96,7 +96,6 @@ Secure-Service -ServiceName "bthserv" -Description "Bluetooth Service"
 Secure-Service -ServiceName "MapsBrooutdated legacy / unnecessary / unneeded pieces of software do i need to disableker" -Description "Downloaded Maps Manager"
 Secure-Service -ServiceName "lfsvc" -Description "Geolocation Service"
 Secure-Service -ServiceName "WerSvc" -Description "Windows Error Reporting"
-Secure-Service -ServiceName "WinHttpAutoProxySvc" -Description "WPAD Proxy Service"
 
 # --- 3. REGISTRY HARDENING ---
 Set-RegKey -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DNSClient" -Name "EnableMulticast" -Value 0 -Description "LLMNR (Disable Multicast)"
@@ -105,6 +104,16 @@ Set-RegKey -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters" -Na
 Set-RegKey -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\ScriptedDiagnostics" -Name "EnableDiagnostics" -Value 0 -Description "MSDT (Follina Fix)"
 Set-RegKey -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoDriveTypeAutoRun" -Value 255 -Description "Autoplay (Disable All Drives)"
 
+Write-Host "Forcing WPAD Disable via Registry..." -ForegroundColor Cyan
+try {
+    # 'Start' = 4 means Disabled
+    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\WinHttpAutoProxySvc" -Name "Start" -Value 4 -Force -ErrorAction Stop
+    Write-Host " [SUCCESS] WPAD set to disabled. It will not start after reboot." -ForegroundColor Green
+}
+catch {
+    Write-Host " [FATAL ERROR] Registry access denied. Check if Red Team has locked the keys." -ForegroundColor Red
+    Write-Error $_.Exception.Message
+}
 # --- 4. AUTHENTICATION (NTLM) ---
 # NTLMv1 Removal / Force NTLMv2
 Set-RegKey -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "LmCompatibilityLevel" -Value 5 -Description "NTLM Hardening (Level 5)"
